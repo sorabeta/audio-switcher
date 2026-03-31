@@ -84,10 +84,6 @@ The GUI can configure:
 - overlay notifications
 - overlay duration
 
-## Screenshots
-
-![Tray Menu Preview](docs/tray-preview.png)
-![Settings Window Preview](docs/settings-preview.png)
 
 ## Tech Notes
 
