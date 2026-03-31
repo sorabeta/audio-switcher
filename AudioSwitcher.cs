@@ -37,7 +37,7 @@ namespace AudioSwitcherApp
             var exeDir = Path.GetDirectoryName(Application.ExecutablePath) ?? AppDomain.CurrentDomain.BaseDirectory;
             configPath = Path.Combine(exeDir, "config.json");
 
-            iconResources = AppIconResources.Create();
+            iconResources = AppIconResources.Create(exeDir);
             notifyIcon = new NotifyIcon
             {
                 Icon = iconResources.Icon,
@@ -575,8 +575,14 @@ namespace AudioSwitcherApp
             Icon = icon;
         }
 
-        public static AppIconResources Create()
+        public static AppIconResources Create(string baseDirectory)
         {
+            var iconPath = Path.Combine(baseDirectory, "assets", "app-icon.ico");
+            if (File.Exists(iconPath))
+            {
+                return new AppIconResources(null, IntPtr.Zero, new Icon(iconPath));
+            }
+
             var bitmap = new Bitmap(16, 16);
             using (var graphics = Graphics.FromImage(bitmap))
             using (var brush = new SolidBrush(Color.FromArgb(0, 120, 215)))
