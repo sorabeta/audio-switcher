@@ -2,6 +2,8 @@
 
 A lightweight Windows tray utility for switching between selected audio output devices with a custom global hotkey.
 
+![Audio Switcher Logo](assets/app-logo.png)
+
 ## Overview
 
 Audio Switcher lives in the Windows system tray and lets you:
@@ -84,12 +86,8 @@ The GUI can configure:
 
 ## Screenshots
 
-Add screenshots after publishing if you want:
-
-```md
-![Tray Menu](docs/tray-menu.png)
-![Settings Window](docs/settings-window.png)
-```
+![Tray Menu Preview](docs/tray-preview.png)
+![Settings Window Preview](docs/settings-preview.png)
 
 ## Tech Notes
 
