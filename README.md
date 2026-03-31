@@ -1,5 +1,7 @@
 # Audio Switcher
 
+Prompt: 一个简单的Windows应用，支持通过自定义热键来切换系统默认的音频输出选项，可自行配置在哪些输出选项中切换，切换时在状态栏或者屏幕上有提示。输出选择和热键设置都要做成gui界面，在状态栏有图标显示。
+
 A lightweight Windows tray utility for switching between selected audio output devices with a custom global hotkey.
 
 ![Audio Switcher Logo](assets/app-logo.png)
