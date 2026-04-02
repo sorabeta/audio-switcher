@@ -22,6 +22,7 @@ This project is built as a native Windows `.exe` using C# WinForms and the Windo
 - Tray icon with context menu
 - GUI settings window
 - Custom global hotkey
+- Launch at startup option
 - Selectable output device list
 - Tray balloon notifications
 - On-screen overlay notifications
@@ -82,6 +83,7 @@ The GUI can configure:
 - selected audio output devices
 - hotkey modifiers
 - hotkey key
+- launch at startup
 - tray notifications
 - overlay notifications
 - overlay duration

@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace AudioSwitcherApp
 {
@@ -95,6 +96,7 @@ namespace AudioSwitcherApp
         {
             try
             {
+                StartupManager.Apply(config);
                 configuredDevices = ResolveConfiguredDevices(config);
 
                 if (configuredDevices.Count < 2)
@@ -342,6 +344,7 @@ namespace AudioSwitcherApp
         private readonly CheckBox altModifier;
         private readonly CheckBox winModifier;
         private readonly ComboBox keyComboBox;
+        private readonly CheckBox runAtStartup;
         private readonly CheckBox trayNotification;
         private readonly CheckBox overlayNotification;
         private readonly NumericUpDown overlayDuration;
@@ -381,18 +384,24 @@ namespace AudioSwitcherApp
             keyComboBox = new ComboBox { Left = 352, Top = 263, Width = 150, DropDownStyle = ComboBoxStyle.DropDownList };
             Controls.Add(keyComboBox);
 
-            var notificationLabel = new Label { Left = 16, Top = 316, Width = 160, Text = "Notifications:" };
+            var startupLabel = new Label { Left = 16, Top = 316, Width = 160, Text = "Startup:" };
+            Controls.Add(startupLabel);
+
+            runAtStartup = new CheckBox { Left = 16, Top = 344, Width = 240, Text = "Launch automatically at sign-in" };
+            Controls.Add(runAtStartup);
+
+            var notificationLabel = new Label { Left = 16, Top = 382, Width = 160, Text = "Notifications:" };
             Controls.Add(notificationLabel);
 
-            trayNotification = new CheckBox { Left = 16, Top = 344, Width = 220, Text = "Tray balloon notification" };
-            overlayNotification = new CheckBox { Left = 16, Top = 372, Width = 240, Text = "On-screen overlay notification" };
+            trayNotification = new CheckBox { Left = 16, Top = 410, Width = 220, Text = "Tray balloon notification" };
+            overlayNotification = new CheckBox { Left = 16, Top = 438, Width = 240, Text = "On-screen overlay notification" };
             Controls.Add(trayNotification);
             Controls.Add(overlayNotification);
 
-            var durationLabel = new Label { Left = 16, Top = 406, Width = 180, Text = "Overlay duration (ms):" };
+            var durationLabel = new Label { Left = 16, Top = 472, Width = 180, Text = "Overlay duration (ms):" };
             Controls.Add(durationLabel);
 
-            overlayDuration = new NumericUpDown { Left = 200, Top = 402, Width = 100, Minimum = 500, Maximum = 5000, Increment = 100 };
+            overlayDuration = new NumericUpDown { Left = 200, Top = 468, Width = 100, Minimum = 500, Maximum = 5000, Increment = 100 };
             Controls.Add(overlayDuration);
 
             var saveButton = new Button { Left = 336, Top = 460, Width = 80, Text = "Save" };
@@ -416,6 +425,7 @@ namespace AudioSwitcherApp
             var nextConfig = AppConfig.Normalize(config);
             nextConfig.Hotkey = new HotkeyConfig { Modifiers = BuildModifierList(), Key = (string)keyComboBox.SelectedItem };
             nextConfig.Devices = new List<DeviceMatchConfig>();
+            nextConfig.Startup = new StartupConfig { RunAtLogin = runAtStartup.Checked };
 
             for (var index = 0; index < deviceList.Items.Count; index++)
             {
@@ -492,6 +502,9 @@ namespace AudioSwitcherApp
                     deviceList.SetItemChecked(i, true);
                 }
             }
+
+            var startup = config.Startup ?? StartupConfig.CreateDefault();
+            runAtStartup.Checked = startup.RunAtLogin;
 
             var notifications = config.Notifications ?? NotificationConfig.CreateDefault();
             trayNotification.Checked = notifications.Tray;
@@ -758,6 +771,7 @@ namespace AudioSwitcherApp
     {
         public HotkeyConfig Hotkey { get; set; }
         public List<DeviceMatchConfig> Devices { get; set; }
+        public StartupConfig Startup { get; set; }
         public NotificationConfig Notifications { get; set; }
 
         public static AppConfig CreateDefault()
@@ -770,6 +784,7 @@ namespace AudioSwitcherApp
                     Key = "F11"
                 },
                 Devices = new List<DeviceMatchConfig>(),
+                Startup = StartupConfig.CreateDefault(),
                 Notifications = NotificationConfig.CreateDefault()
             };
         }
@@ -786,6 +801,11 @@ namespace AudioSwitcherApp
             if (result.Devices == null)
             {
                 result.Devices = new List<DeviceMatchConfig>();
+            }
+
+            if (result.Startup == null)
+            {
+                result.Startup = StartupConfig.CreateDefault();
             }
 
             if (result.Notifications == null)
@@ -810,6 +830,16 @@ namespace AudioSwitcherApp
         public string DisplayName { get; set; }
     }
 
+    internal sealed class StartupConfig
+    {
+        public bool RunAtLogin { get; set; }
+
+        public static StartupConfig CreateDefault()
+        {
+            return new StartupConfig { RunAtLogin = false };
+        }
+    }
+
     internal sealed class NotificationConfig
     {
         public bool Tray { get; set; }
@@ -824,6 +854,34 @@ namespace AudioSwitcherApp
                 Overlay = true,
                 OverlayDurationMs = 1500
             };
+        }
+    }
+
+    internal static class StartupManager
+    {
+        private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
+        private const string AppName = "AudioSwitcher";
+
+        public static void Apply(AppConfig config)
+        {
+            var startup = config.Startup ?? StartupConfig.CreateDefault();
+            using (var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, true))
+            {
+                if (key == null)
+                {
+                    return;
+                }
+
+                if (startup.RunAtLogin)
+                {
+                    var exePath = Application.ExecutablePath;
+                    key.SetValue(AppName, "\"" + exePath + "\"", RegistryValueKind.String);
+                }
+                else
+                {
+                    key.DeleteValue(AppName, false);
+                }
+            }
         }
     }
 
